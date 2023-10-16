@@ -1,0 +1,5 @@
+# Excluir el archivo .env
+.env
+
+# Excluir todos los archivos con extensión .json
+empleadmin-api-driver.json

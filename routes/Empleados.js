@@ -88,7 +88,6 @@ const upload = multer({ storage: storage });
 
 
 
-
 //---------------------------------------
 
 
@@ -108,7 +107,7 @@ router.post('/InsEmpleado', upload.single('imagen'), (req, res) => {
                         if(results.length >= 0){
                           const imagen = req.file;
                           if (!imagen) {
-                            return res.status(400).json({ message: "No se subió ningún archivo" });
+                            return res.status(403).json({ message: "No se subió ningún archivo" });
                           }else{
                              //-----------------------
                              const filePath = imagen.path;
@@ -159,7 +158,7 @@ router.post('/InsEmpleado', upload.single('imagen'), (req, res) => {
 
 
                         }else{
-                            return res.status(400).json({message: "Empresa no ingresada"});
+                            return res.status(402).json({message: "Empresa no ingresada"});
                         }
 
 
@@ -174,7 +173,7 @@ router.post('/InsEmpleado', upload.single('imagen'), (req, res) => {
            
            
               }else{
-                    return res.status(400).json({message: "Empleado ya ingresada"});
+                    return res.status(401).json({message: "Empleado ya ingresada"});
               }
 
         }else{
