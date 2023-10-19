@@ -53,17 +53,22 @@ router.post('/signup', (req, res) => {
 //verifica el acceso, a los usuarios permitidos les envia un token, a lo que no estan verificados los manda averificar a la administracion
 router.post('/login', (req, res) => {
     const user = req.body;
+    //se trae los datos de la base de datos para verificar sus datos 
     var query = "select correo, password, status,  role from user_perfil_empresa where correo=?";
     coneccion.query(query, [user.correo], (err, results) => {
         if (!err){
+            //se verifica el correo y la contraseña ingresada por el usuario con los datos guardados en la base de datos 
             if(results.length <= 0 || results[0].password != user.password){
                 return res.status(401).json({message: "usuario o contraseña incorrecto"});
             }else{
+                //se verifica si el estadus es true 
                 if(results[0].status === "false"){
                     return res.status(402).json({message: "comunicarse a la administracion"});
                 }else{
                     if(results[0].password == user.password){
+                        //variables que se incluiran en el token
                         const resultado = {correo: results[0].correo, role: results[0].role};
+                        //se genera el token con con las variables a sifrar con la duracion de este token 
                         const accesstoken = jwt.sign(resultado, process.env.ACCESS_TOKEN, {
                             expiresIn: "8H",
                         });
@@ -78,6 +83,7 @@ router.post('/login', (req, res) => {
         }
     });
 });
+
 
 //por este medio se envia el correo de recuperacion
 var transport = nodemailer.createTransport({
