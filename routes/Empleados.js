@@ -16,9 +16,12 @@ const fs = require('fs');
 
 //procesar imagen 
 const multer = require('multer'); 
+const { authenticate } = require('@google-cloud/local-auth');
 
 //se llmana las variables gobales
 require('dotenv').config();
+
+
 
 //----------------------
 
@@ -184,6 +187,69 @@ router.post('/cuenBancaria', auth.authenticateToken, checkRole.check_Role, (req,
     }
   })
 })
+
+//buscar empledado
+router.post('/buscarEmpleado', auth.authenticateToken, checkRole.check_Role, (req, res) => {
+  console.log("buscar empleado")
+  let buscar = req.body;
+
+  console.log(buscar.id_cedula)
+  var query = "SELECT tipo_documento FROM empleado WHERE id_cedula = ?";
+  coneccion.query(query, [buscar.id_cedula], (err, results) =>{
+      if (!err){
+        if(results.length !== 0){
+          const tipo_documento_db = results[0].tipo_documento;
+          const tipo_document_user = buscar.tipo_documento;
+         
+          if(tipo_document_user === tipo_documento_db){
+
+            query = "SELECT nombre, apellidos FROM empleado WHERE id_cedula = ?"
+            coneccion.query(query, [buscar.id_cedula], (err, results)=>{
+              if(!err){
+                const nombre = results[0].nombre;
+
+                const apelidos = results[0].apellidos;
+
+                return res.status(200).json({nombre, apelidos});
+              }else{
+                return res.status(500).json(err);
+              }
+            })
+            
+          }else{
+            return res.status(401).json({message: "verifaca los campos la cedula y el tipo de documento"});
+          }
+          
+        }else{
+          return res.status(400).json({message: "no esiste el empleado ingresalo"});
+        }
+
+         // return res.status(200).json(results);
+      }else{
+          return res.status(500).json(err);
+      }
+  });
+});
+
+
+
+//se ingresan los datos de asistencia 
+router.post('/asistenciaR', auth.authenticateToken, checkRole.check_Role, (req, res)=>{
+  let asistencia = req.body;
+  console.log(asistencia.fecha)
+  console.log(asistencia.horario)
+  console.log(asistencia.id_cedula_a)
+
+  var query = "INSERT INTO asistencia(id_registro_asistencia, fecha, horario, id_cedula_a) VALUES (NULL,?,?,?)";
+  coneccion.query(query, [asistencia.fecha, asistencia.horario, asistencia.id_cedula_a], (err, results) =>{
+    if(!err){
+      return res.status(200).json({message: "asistencia insertada correctamente"})
+    }else{
+      return res.status(500).json(err);
+    }
+  });
+});
+
 
 
 
