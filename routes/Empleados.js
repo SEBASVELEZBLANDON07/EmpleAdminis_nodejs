@@ -17,6 +17,7 @@ const fs = require('fs');
 //procesar imagen 
 const multer = require('multer'); 
 const { authenticate } = require('@google-cloud/local-auth');
+const { Console } = require('console');
 
 //se llmana las variables gobales
 require('dotenv').config();
@@ -190,41 +191,34 @@ router.post('/cuenBancaria', auth.authenticateToken, checkRole.check_Role, (req,
 
 //buscar empledado
 router.post('/buscarEmpleado', auth.authenticateToken, checkRole.check_Role, (req, res) => {
-  console.log("buscar empleado")
   let buscar = req.body;
-
-  console.log(buscar.id_cedula)
+  //se busca el tipo de documento del empleado 
   var query = "SELECT tipo_documento FROM empleado WHERE id_cedula = ?";
   coneccion.query(query, [buscar.id_cedula], (err, results) =>{
       if (!err){
         if(results.length !== 0){
+          //se asignan valores tipo documento de db y de frond 
           const tipo_documento_db = results[0].tipo_documento;
           const tipo_document_user = buscar.tipo_documento;
-         
+          //se comparan los tipos de documentos 
           if(tipo_document_user === tipo_documento_db){
-
+            //se buscan los datos nombre y apellido 
             query = "SELECT nombre, apellidos FROM empleado WHERE id_cedula = ?"
             coneccion.query(query, [buscar.id_cedula], (err, results)=>{
               if(!err){
                 const nombre = results[0].nombre;
-
                 const apelidos = results[0].apellidos;
-
                 return res.status(200).json({nombre, apelidos});
               }else{
                 return res.status(500).json(err);
               }
-            })
-            
+            });
           }else{
             return res.status(401).json({message: "verifaca los campos la cedula y el tipo de documento"});
           }
-          
         }else{
           return res.status(400).json({message: "no esiste el empleado ingresalo"});
         }
-
-         // return res.status(200).json(results);
       }else{
           return res.status(500).json(err);
       }
@@ -235,11 +229,8 @@ router.post('/buscarEmpleado', auth.authenticateToken, checkRole.check_Role, (re
 
 //se ingresan los datos de asistencia 
 router.post('/asistenciaR', auth.authenticateToken, checkRole.check_Role, (req, res)=>{
-  let asistencia = req.body;
-  console.log(asistencia.fecha)
-  console.log(asistencia.horario)
-  console.log(asistencia.id_cedula_a)
-
+  let asistencia = req.body
+  //se registra la asistencia 
   var query = "INSERT INTO asistencia(id_registro_asistencia, fecha, horario, id_cedula_a) VALUES (NULL,?,?,?)";
   coneccion.query(query, [asistencia.fecha, asistencia.horario, asistencia.id_cedula_a], (err, results) =>{
     if(!err){
@@ -250,6 +241,45 @@ router.post('/asistenciaR', auth.authenticateToken, checkRole.check_Role, (req, 
   });
 });
 
+//se ingresan los datos de horas estras 
+router.post('/horasExtras', auth.authenticateToken, checkRole.check_Role, (req, res)=>{
+  let horasExtras = req.body;
+  //se busca el total de horas ingresadas al empoleado 
+  var query = "SELECT total FROM horas_extras WHERE id_cedula_h = ? ORDER BY id_registro_horas_extras DESC LIMIT 1;";
+  coneccion.query(query, [horasExtras.id_cedula_h], (err, results) =>{
+    if(!err){
+      if(results.length == 0){
+        const total = horasExtras.horas_extras;
+        //se inserta las horas extras cuando es por primera vez  
+        query = "INSERT INTO horas_extras(id_registro_horas_extras, fecha, horas_extras, total, id_cedula_h) VALUES (NULL,?,?,?,?)"
+        coneccion.query(query, [horasExtras.fecha, horasExtras.horas_extras, total, horasExtras.id_cedula_h], (err, results)=>{
+          if(!err){
+            return res.status(200).json({message: "horas extras insertadas correctamente"})
+          }else{
+            return res.status(500).json(err);
+          }
+        });
+      }else{
+        //se asignan los valores a las variables 
+        const horaTotalDb = parseFloat(results[0].total);
+        const horasnuevas = parseFloat(horasExtras.horas_extras);
+        // se suman las horas extras enviadas del fron mas las horas registradsas en la db
+        let total = horaTotalDb + horasnuevas;
+        //se insertan los datos a la base de datos
+        query = "INSERT INTO horas_extras(id_registro_horas_extras, fecha, horas_extras, total, id_cedula_h) VALUES (NULL,?,?,?,?)"
+        coneccion.query(query, [horasExtras.fecha, horasExtras.horas_extras, total, horasExtras.id_cedula_h], (err, results)=>{
+          if(!err){
+            return res.status(200).json({message: "horas extras insertadas correctamente"})
+          }else{
+            return res.status(500).json(err);
+          }
+        });
+      } 
+    }else{
+      return res.status(500).json(err);
+    }
+  });
+});
 
 
 
