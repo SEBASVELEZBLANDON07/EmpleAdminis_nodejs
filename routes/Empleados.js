@@ -25,15 +25,15 @@ require('dotenv').config();
 
 
 //----------------------
-
+/*
 function uploadImageToGoogleDrive() {
-  const filePath = './controllers/logo_logo.png';
-  const fileData = {
-    buffer: fs.readFileSync(filePath),
-    mimeType: 'image/jpeg', // Cambia el tipo MIME según el tipo de imagen
-    originalname: 'logo_experimentando.png', // Nombre original del archivo
-  };
-
+  //const filePath = './controllers/logo_logo.png';
+  //const fileData = {
+    //buffer: fs.readFileSync(filePath),
+   // mimeType: 'image/jpeg', // Cambia el tipo MIME según el tipo de imagen
+   // originalname: 'logo_experimentando.png', // Nombre original del archivo
+  //};
+  
   apiDriver.uploadFile(fileData)
   .then((imageUrl) => {
     console.log('URL de la imagen en Google Drive:', imageUrl);
@@ -43,21 +43,33 @@ function uploadImageToGoogleDrive() {
   });
 }
 
-
-// Configura multer para guardar las imágenes en una carpeta
+*/
+// Configura multer para procesar imagenes y guardar las imágenes en una carpeta
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, './controllers');
+    cb(null, './fotografia_almacenar');
   },
   filename: function (req, file, cb) {
     // Usa el nombre original del archivo
     cb(null, file.originalname); 
   }
 });
-const upload = multer({ storage: storage });
+const uploadImg = multer({ storage: storage });
 
-//ingresar los datos personales del empleado 
-router.post('/InsEmpleado', auth.authenticateToken, checkRole.check_Role, upload.single('imagen'), (req, res) => {
+//Configura multer para procesar archivos pdf y guardar las imágenes en una carpeta
+const storagePDF = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './Incapacidad_pdf');
+  },
+  filename: function (req, file, cb) {
+    // Usa el nombre original del archivo
+    cb(null, file.originalname); 
+  }
+});
+const uploadPDF = multer({ storage: storagePDF });
+
+//ingresar los datos personales del empleado con la fotofrafia del empleado
+router.post('/InsEmpleado', auth.authenticateToken, checkRole.check_Role, uploadImg.single('imagen'), (req, res) => {
   let inset_empleado = req.body;  
 
   //se verifica si no hay otro emppleado con ese id 
@@ -88,14 +100,10 @@ router.post('/InsEmpleado', auth.authenticateToken, checkRole.check_Role, upload
                 
                 //se define el fileobject
                 const fileData = {
-                  //se octine la imagen a procesar 
                   buffer: fs.readFileSync(filePath),
-                  //tipo MIME según el tipo de imagen
                   mimeType: 'image/jpeg', 
-                  //nombre con el que se guada el archivo en driver
-                  originalname: inset_empleado.id_cedula + '-nombre-' +  inset_empleado.nombre,
+                  originalname: inset_empleado.id_cedula + '-fotografia-Nombre-' +  inset_empleado.nombre,
                 };
-                const fotografia = null
 
                 //se procesa la imagen, se envia asia la api de driver para suvirla a driver 
                 apiDriver.uploadFile(fileData).then((imageUrl) => {
@@ -121,6 +129,7 @@ router.post('/InsEmpleado', auth.authenticateToken, checkRole.check_Role, upload
 
                 }).catch((error) => {
                   console.error('Error al cargar la imagen:', error);
+                  return res.status(500).json(err);
                 });                 
               }
             }else{
@@ -225,8 +234,6 @@ router.post('/buscarEmpleado', auth.authenticateToken, checkRole.check_Role, (re
   });
 });
 
-
-
 //se ingresan los datos de asistencia 
 router.post('/asistenciaR', auth.authenticateToken, checkRole.check_Role, (req, res)=>{
   let asistencia = req.body
@@ -281,10 +288,55 @@ router.post('/horasExtras', auth.authenticateToken, checkRole.check_Role, (req, 
   });
 });
 
-
-
-
-
-
+//insertar una incapacidad con su comprobante pdf 
+router.post('/incapacidad', uploadPDF.single('archivoIncapacidad'), (req, res)=>{
+  const incapacidad = req.body;
+  const archivoIncapacidad = req.file;
+  //se verifica si hay un file llamado imagen 
+  if (!archivoIncapacidad) {
+    return res.status(403).json({ message: "No se subió ningún archivo" });
+  }else{
+    //se consulta el npombre del empleado
+    let query ="SELECT nombre FROM empleado WHERE id_cedula = ?";
+    coneccion.query(query, [incapacidad.id_cedula_i], (err, results)=>{
+      if(!err){
+        if(results.length == 0){
+          return res.status(400).json({message: "el id incresado no es valido"})
+        }else{
+          //se guarda el pdf en filePath
+          const filePath = archivoIncapacidad.path;
+          const nombre = results[0].nombre;
+          //se define el fileobject
+          const fileData = {
+            buffer: fs.readFileSync(filePath),
+            mimeType: 'application/pdf', 
+            originalname: incapacidad.id_cedula_i + '-Incapacidad-PDF-Nombre-' +  nombre,
+          };
+            
+          //se procesa el archivo pdf, se envia asia la api de driver para suvirla a driver 
+          apiDriver.uploadFile(fileData).then((pfdUrl) => {
+            //se guarda la url de la imagen guardada 
+            const archivo_incapacidad = pfdUrl; 
+            console.log('URL del pdf en Google Drive:', archivo_incapacidad );
+            //se inserta el registro de incapacidad 
+            query="INSERT INTO incapacidad(Id_registro_incapacidad, fecha_registro, fecha_incapacidad, causa, descripcion, archivo_incapacidad, cantidad_dias_incapacidad, id_cedula_i) VALUES (NULL,?,?,?,?,?,?,?)"
+            coneccion.query(query, [incapacidad.fecha_registro, incapacidad.fecha_incapacidad, incapacidad.causa, incapacidad.descripcion, archivo_incapacidad, incapacidad.cantidad_dias_incapacidad, incapacidad.id_cedula_i], (err,results)=>{
+              if(!err){
+                return res.status(200).json({message: "pdf guadado"});
+              }else{
+                return res.status(500).json(err);
+              }
+            });
+          }).catch((error) => {
+            console.error('Error al cargar la imagen:', error);
+            return res.status(500).json(err);
+          }); 
+        }
+      }else{
+        return res.status(500).json(err);
+      }
+    })
+  }
+})
 
 module.exports = router;
