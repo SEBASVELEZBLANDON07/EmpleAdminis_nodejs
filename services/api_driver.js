@@ -11,7 +11,7 @@ const fs = require("fs");
 const KEYFILEPATH = process.env.GOOGLE_DRIVE_KEYFILEPATH; 
 const SCOPES = process.env.GOOGLE_DRIVE_SCOPES;
 const ID_folder = process.env.GOOGLE_DRIVE_FOLDER_ID;
-const filePath = './controllers/logo_logo.png';
+//const filePath = './controllers/logo_logo.png';
 
 //se autentifica la verificaion 
 const auth = new google.auth.GoogleAuth({
@@ -39,16 +39,31 @@ const uploadFile = async (fileObject) => {
       fields: "id,name",
     });
     //retorna la url de la imagen guardada
-    console.log(`Uploaded file ${data.name} ${data.id}`);
+    console.log(`Uploaded file id ${data.name} ${data.id}`);
     return `https://drive.google.com/file/d/${data.id}`;
   } catch (error) {
-    console.error("Error uploading the file:", error);
+    console.error("Error al subir el archivo:", error);
     throw error;
   }
 };
 
+const deleteFile = async (fileId) => {
+  try{
+    await google.drive({ version: "v3", auth }).files.delete({
+      fileId: fileId
+    });
+    console.log('Delete file id ', fileId);
+    return fileId;
+  }catch (error){
+    console.log("error al eliminar el archivo con id ", fileId, error);
+    throw error;
+  }
+};
+
+
 module.exports = {
   uploadFile,
+  deleteFile,
 };
 
 

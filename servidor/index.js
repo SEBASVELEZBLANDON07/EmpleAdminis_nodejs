@@ -1,13 +1,6 @@
 const express = require('express')
 const cors = require('cors');
 
-
-
-
-
-
-
-
 //se llaman los archivos de coneccion y de routes
 const db = require('../database/conexion_db'); 
 
@@ -18,17 +11,11 @@ const product_route = require('../routes/product');
 const bill_route = require('../routes/bill');
 const bashboard_route = require('../routes/dashboard_route');
 const crearF_route = require('../routes/crear_perfil');
-const empleado_edic_route = require('../routes/Empleados');
-
+const empleado_edic_route = require('../routes/insertEmpleados');
+const deleteEmpleado = require('../routes/deletEmpleado');
 
 //ruta de api driver
 const api_driver = require('../services/api_driver');
-
-
-
-
-
-
 
 const app = express(); 
 
@@ -36,8 +23,6 @@ app.use(cors());
 
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
-
-
 
 //rutas
 app.use('/userRoute', userRoute);
@@ -47,14 +32,7 @@ app.use('/bill_route', bill_route);
 app.use('/dashboard_route', bashboard_route);
 app.use('/crearF_route', crearF_route);
 app.use('/Empleado_edic', empleado_edic_route);
-
-
-
-
-
-
-
-
+app.use('/delet_Empleado', deleteEmpleado);
 
 module.exports = app;
 /*
