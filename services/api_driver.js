@@ -61,6 +61,21 @@ const deleteFile = async (fileId) => {
 };
 
 
+//pruebas
+/*
+const fileId = "1PEhOcey2EYNJoy_fWFFuTp91gvymDsN0"
+
+deleteFile(fileId).then((delete_File)=>{                 
+  
+  console.log("funcion realizada con exito ", delete_File)
+  //return res.status(200).json({message: "funcion realizada con exito"});  
+}).catch((error)=>{
+  return res.status(500).json(error);
+});
+*/
+
+
+
 module.exports = {
   uploadFile,
   deleteFile,
