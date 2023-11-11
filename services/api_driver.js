@@ -3,6 +3,7 @@ require('dotenv').config();
 const { google } = require("googleapis");
 const path = require("path");
 const stream = require("stream");
+const mime = require('mime');
 
 // Módulo para operaciones de sistema de archivos
 const fs = require("fs");
@@ -47,6 +48,7 @@ const uploadFile = async (fileObject) => {
   }
 };
 
+//funcion para eliminar archivos gusrdados en drive por medio de la api 
 const deleteFile = async (fileId) => {
   try{
     await google.drive({ version: "v3", auth }).files.delete({
@@ -63,7 +65,7 @@ const deleteFile = async (fileId) => {
 
 //pruebas
 /*
-const fileId = "1PEhOcey2EYNJoy_fWFFuTp91gvymDsN0"
+const fileId = "id del archivo "
 
 deleteFile(fileId).then((delete_File)=>{                 
   
@@ -76,9 +78,83 @@ deleteFile(fileId).then((delete_File)=>{
 
 
 
+// Función para descargar archivos de Google Drive
+async function downloadFile(fileId) {
+  const drive = google.drive({ version: 'v3', auth });
+
+  return new Promise(async (resolve, reject) => {
+    try {
+      const response = await drive.files.get(
+        { fileId, alt: 'media' },
+        { responseType: 'stream' }
+      );
+
+      const chunks = [];
+
+      console.log("descargando archivo con id: ", fileId)
+
+
+      response.data
+        .on('data', (chunk) => {
+          chunks.push(chunk);
+        })
+        .on('end', () => {
+          const fileContent = Buffer.concat(chunks);
+          resolve(fileContent);
+        })
+        .on('error', (err) => {
+          reject(err);
+        });
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+/*
+// Función para descargar archivos de Google Drive y almacenarlos localmente 
+async function downloadFile(fileId, localFilePath) {
+  const drive = google.drive({ version: 'v3', auth });
+
+  try {
+    const response = await drive.files.get(
+      { fileId, alt: 'media' },
+      { responseType: 'stream' }
+    );
+
+    const dest = fs.createWriteStream(localFilePath);
+
+    return new Promise((resolve, reject) => {
+      response.data
+        .on('end', () => {
+          console.log('Archivo descargado exitosamente.');
+          resolve();
+        })
+        .on('error', (err) => {
+          console.error('Error al descargar el archivo:', err);
+          reject(err);
+        })
+        .pipe(dest);
+    });
+  } catch (error) {
+    console.error('Error al descargar el archivo:', error);
+    throw error;
+  }
+}*/
+
+/*
+//pruebas
+const fileId = 'id de archivo'; 
+const localFilePath = 'carpeta donde se almacenara y su nombre';
+
+downloadFile(fileId, localFilePath);
+*/
+
+
 module.exports = {
   uploadFile,
   deleteFile,
+  downloadFile,
 };
 
 
