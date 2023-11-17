@@ -101,6 +101,7 @@ router.get('/pdfDescargar/:id', async (req, res) => {
     }
 });
 
+//ruta para breve informacion del historial del emplado 
 router.get('/infoEmpleadoEliminar/:id', (req, res) => {
     const Id_Refernt = req.params.id;
     
@@ -116,7 +117,7 @@ router.get('/infoEmpleadoEliminar/:id', (req, res) => {
                     if(!err){
                         const perfil  = results;
 
-                        query = "SELECT COUNT(*) as total_inserciones FROM `asistencia` WHERE id_cedula_a = ?";
+                        query = "SELECT COUNT(*) as total_inserciones_asistencias FROM `asistencia` WHERE id_cedula_a = ?";
                         coneccion.query(query, [Id_Refernt], (err, results)=>{
                             if(!err){
                                 const asistencia  = results;
@@ -126,22 +127,33 @@ router.get('/infoEmpleadoEliminar/:id', (req, res) => {
                                     if(!err){
                                         const totalHorasExtras  = results;
 
-                                        query = "SELECT COUNT(*) as total_inserciones FROM `incapacidad` WHERE id_cedula_i = ?";
+                                        query = "SELECT COUNT(*) as total_inserciones_incapacidades FROM `incapacidad` WHERE id_cedula_i = ?";
                                         coneccion.query(query, [Id_Refernt], (err, results)=>{
                                             if(!err){
                                                 const incapacidades  = results;
         
-                                                query = "SELECT COUNT(*) as total_inserciones FROM `inasistencia` WHERE id_cedula_ina = ?";
+                                                query = "SELECT COUNT(*) as total_inserciones_inasistencias FROM `inasistencia` WHERE id_cedula_ina = ?";
                                                 coneccion.query(query, [Id_Refernt], (err, results)=>{
                                                     if(!err){
                                                         const inasistencias  = results;
-                
-                                                        return res.status(200).json({perfil, asistencia, totalHorasExtras, incapacidades, inasistencias});
-                
+                                                        
+                                                        query = "SELECT `salario` FROM `cuenta_bancaria_empleado` WHERE id_cedula_c =?";
+                                                        coneccion.query(query, [Id_Refernt], (err, results)=>{
+                                                            if(!err){
+                                                                const salario  = results;
+                        
+                                                                return res.status(200).json({perfil, salario, asistencia, totalHorasExtras, incapacidades, inasistencias});
+                        
+                                                            }else{
+                                                                return res.status(500).json(err);
+                                                            }
+                                                        });
+
                                                     }else{
                                                         return res.status(500).json(err);
                                                     }
                                                 });
+
                                             }else{
                                                 return res.status(500).json(err);
                                             }
@@ -163,8 +175,7 @@ router.get('/infoEmpleadoEliminar/:id', (req, res) => {
     });
 });
 
-
-
+//ruta para reguistros del empleado 
 router.get('/infoEmpleado/:id', (req, res) => {
     const Id_info = req.params.id;
 

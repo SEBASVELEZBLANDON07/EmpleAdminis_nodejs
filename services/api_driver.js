@@ -92,8 +92,7 @@ async function downloadFile(fileId) {
       const chunks = [];
 
       console.log("descargando archivo con id: ", fileId)
-
-
+      
       response.data
         .on('data', (chunk) => {
           chunks.push(chunk);

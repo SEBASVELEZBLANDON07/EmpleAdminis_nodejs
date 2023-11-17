@@ -182,10 +182,24 @@ router.post('/RegisEmpleado_eliminado', (req, res) => {
     const id_empleadoEliminado = req.body;
 
     //se ase la insercopn a la base de datos del empleado que se elimino 
-    var query = "INSERT INTO `empleados_eliminados`(`id_empleados_eliminados`, `motivo_eliminacion`) VALUES (?,?)";
-    coneccion.query(query, [id_empleadoEliminado.id_empleados_eliminados, id_empleadoEliminado.motivo_eliminacion], (err, results)=>{
+    var query = "INSERT INTO `empleados_eliminados`(`id_empleados_eliminados`, `motivo_eliminacion`, `fechaEliminacion`,  `empresa_empleado`) VALUES (?,?,?,?)";
+    coneccion.query(query, [id_empleadoEliminado.id_empleados_eliminados, id_empleadoEliminado.motivo_eliminacion, id_empleadoEliminado.fechaEliminacion, id_empleadoEliminado.empresa_empleado], (err, results)=>{
         if(!err){
             return res.status(200).json({message: "se registra el empleado eliminado"});
+        }else{
+            return res.status(500).json(err);
+        }
+    });
+});
+
+router.get('/Empleado_eliminados/:id', (req, res, next) =>{
+    const resgistro_empresa = req.params.id;
+
+    var query = "SELECT `id_empleados_eliminados`, `motivo_eliminacion`, `fechaEliminacion` FROM `empleados_eliminados` WHERE empresa_empleado = ?";
+    coneccion.query(query, [resgistro_empresa], (err, results)=>{
+        if(!err){
+            return res.status(200).json(results);
+
         }else{
             return res.status(500).json(err);
         }
