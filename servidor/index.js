@@ -14,6 +14,8 @@ const crearF_route = require('../routes/crear_perfil');
 const empleado_edic_route = require('../routes/insertEmpleados');
 const deleteEmpleado = require('../routes/deletEmpleado');
 const infoEmpleado = require('../routes/infoEmpleado');
+const inventarioEmpleados = require('../routes/inventarioEmpleados');
+
 
 //ruta de api driver
 const api_driver = require('../services/api_driver');
@@ -35,6 +37,8 @@ app.use('/crearF_route', crearF_route);
 app.use('/Empleado_edic', empleado_edic_route);
 app.use('/delet_Empleado', deleteEmpleado);
 app.use('/info_empleado', infoEmpleado);
+app.use('/inventarioEmple', inventarioEmpleados);
+
 
 module.exports = app;
 /*
