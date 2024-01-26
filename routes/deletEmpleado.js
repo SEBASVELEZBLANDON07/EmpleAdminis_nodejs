@@ -64,31 +64,41 @@ router.delete('/deleteEmpleado/:id', (req, res, next) => {
                                         coneccion.query(query, [id_eliminar], (err, results)=>{
                                             if(!err){
 
-                                                //eliminamos la cuenta bancaria registrada en la base de datos
-                                                query = "DELETE FROM `cuenta_bancaria_empleado` WHERE id_cedula_c = ?";
+                                                //eliminar las inasistencias registradas en la base de datos
+                                                query = "DELETE FROM `inasistencia` WHERE id_cedula_ina = ?";
                                                 coneccion.query(query, [id_eliminar], (err, results)=>{
                                                     if(!err){
 
-                                                        //eliminamos el perfil del empleado 
-                                                        query = "DELETE FROM `empleado` WHERE id_cedula = ?";
+                                                        //eliminamos la cuenta bancaria registrada en la base de datos
+                                                        query = "DELETE FROM `cuenta_bancaria_empleado` WHERE id_cedula_c = ?";
                                                         coneccion.query(query, [id_eliminar], (err, results)=>{
+
                                                             if(!err){
-                                                                
-                                                                return res.status(200).json({message: "funcion realizada con exito"});  
+
+                                                                //eliminamos el perfil del empleado 
+                                                                query = "DELETE FROM `empleado` WHERE id_cedula = ?";
+                                                                coneccion.query(query, [id_eliminar], (err, results)=>{
+                                                                    
+                                                                    if(!err){
+                                                                        return res.status(200).json({message: "funcion realizada con exito"});  
+                                                                    }else{
+                                                                        return res.status(500).json(err);
+                                                                    }
+                                                                });
                                                             }else{
-                                                                return res.status(500).json(error);
+                                                                return res.status(500).json(err);
                                                             }
                                                         });
                                                     }else{
-                                                        return res.status(500).json(error);
+                                                        return res.status(500).json(err)
                                                     }
-                                                });
+                                                })
                                             }else{
-                                                return res.status(500).json(error);
+                                                return res.status(500).json(err);
                                             }
                                         });
                                     }else{
-                                        return res.status(500).json(error);
+                                        return res.status(500).json(err);
                                     }
                                 });
 
@@ -129,37 +139,47 @@ router.delete('/deleteEmpleado/:id', (req, res, next) => {
                                                 query = "DELETE FROM `asistencia` WHERE id_cedula_a = ?";
                                                 coneccion.query(query, [id_eliminar], (err, results)=>{
                                                     if(!err){
-
-                                                        //eliminamos la cuenta bancaria registrada en la base de datos
-                                                        query = "DELETE FROM `cuenta_bancaria_empleado` WHERE id_cedula_c = ?";
+                                                        
+                                                        //eliminar las inasistencias registradas en la base de datos
+                                                        query = "DELETE FROM `inasistencia` WHERE id_cedula_ina = ?";
                                                         coneccion.query(query, [id_eliminar], (err, results)=>{
-
                                                             if(!err){
 
-                                                                //eliminamos el perfil del empleado 
-                                                                query = "DELETE FROM `empleado` WHERE id_cedula = ?";
+                                                                //eliminamos la cuenta bancaria registrada en la base de datos
+                                                                query = "DELETE FROM `cuenta_bancaria_empleado` WHERE id_cedula_c = ?";
                                                                 coneccion.query(query, [id_eliminar], (err, results)=>{
-                                                                    
+
                                                                     if(!err){
-                                                                        return res.status(200).json({message: "funcion realizada con exito"});  
+
+                                                                        //eliminamos el perfil del empleado 
+                                                                        query = "DELETE FROM `empleado` WHERE id_cedula = ?";
+                                                                        coneccion.query(query, [id_eliminar], (err, results)=>{
+                                                                            
+                                                                            if(!err){
+                                                                                return res.status(200).json({message: "funcion realizada con exito"});  
+                                                                            }else{
+                                                                                return res.status(500).json(err);
+                                                                            }
+                                                                        });
                                                                     }else{
-                                                                        return res.status(500).json(error);
+                                                                        return res.status(500).json(err);
                                                                     }
                                                                 });
                                                             }else{
-                                                                return res.status(500).json(error);
+                                                                return res.status(500).json(err)
                                                             }
-                                                        });
+                                                        })
+                                                        
                                                     }else{
-                                                        return res.status(500).json(error);
+                                                        return res.status(500).json(err);
                                                     }
                                                 });
                                             }else{
-                                                return res.status(500).json(error);
+                                                return res.status(500).json(err);
                                             }
                                         });
                                     }else{
-                                        return res.status(500).json(error);
+                                        return res.status(500).json(err);
                                     }
                                 }); 
                             }

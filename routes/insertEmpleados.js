@@ -202,31 +202,43 @@ router.post('/cuenBancaria', auth.authenticateToken, checkRole.check_Role, (req,
 router.post('/buscarEmpleado', auth.authenticateToken, checkRole.check_Role, (req, res) => {
   let buscar = req.body;
   //se busca el tipo de documento del empleado 
-  var query = "SELECT tipo_documento FROM empleado WHERE id_cedula = ?";
-  coneccion.query(query, [buscar.id_cedula], (err, results) =>{
+  var query = "SELECT `id_empresa` FROM `empresa` WHERE nom_empresa = ?";
+  coneccion.query(query, [buscar.nom_empresa], (err, results) =>{
       if (!err){
         if(results.length !== 0){
-          //se asignan valores tipo documento de db y de frond 
-          const tipo_documento_db = results[0].tipo_documento;
-          const tipo_document_user = buscar.tipo_documento;
-          //se comparan los tipos de documentos 
-          if(tipo_document_user === tipo_documento_db){
-            //se buscan los datos nombre y apellido 
-            query = "SELECT nombre, apellidos FROM empleado WHERE id_cedula = ?"
-            coneccion.query(query, [buscar.id_cedula], (err, results)=>{
-              if(!err){
-                const nombre = results[0].nombre;
-                const apelidos = results[0].apellidos;
-                return res.status(200).json({nombre, apelidos});
+          const id_empresa_e = results[0].id_empresa;
+          query = "SELECT `tipo_documento` FROM `empleado` WHERE id_empresa_e = ? AND id_cedula = ?"
+          coneccion.query(query, [id_empresa_e, buscar.id_cedula], (err, results)=>{
+            if(!err){
+              if(results.length !== 0){
+                 //se asignan valores tipo documento de db y de frond 
+                  const tipo_documento_db = results[0].tipo_documento;
+                  const tipo_document_user = buscar.tipo_documento;
+                  //se comparan los tipos de documentos 
+                  if(tipo_document_user === tipo_documento_db){
+                    //se buscan los datos nombre y apellido 
+                    query = "SELECT nombre, apellidos FROM empleado WHERE id_cedula = ?"
+                    coneccion.query(query, [buscar.id_cedula], (err, results)=>{
+                      if(!err){
+                        const nombre = results[0].nombre;
+                        const apelidos = results[0].apellidos;
+                        return res.status(200).json({nombre, apelidos});
+                      }else{
+                        return res.status(500).json(err);
+                      }
+                    });
+                  }else{
+                    return res.status(401).json({message: "verifaca los campos la cedula y el tipo de documento"});
+                  }
               }else{
-                return res.status(500).json(err);
+                return res.status(400).json({message: "empleado no encontrado"});
               }
-            });
-          }else{
-            return res.status(401).json({message: "verifaca los campos la cedula y el tipo de documento"});
-          }
+            }else{
+              return res.status(500).json(err);
+            }
+          })
         }else{
-          return res.status(400).json({message: "no esiste el empleado ingresalo"});
+          return res.status(400).json({message: "no se encontro la empresa"});
         }
       }else{
           return res.status(500).json(err);

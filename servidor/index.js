@@ -16,9 +16,11 @@ const deleteEmpleado = require('../routes/deletEmpleado');
 const infoEmpleado = require('../routes/infoEmpleado');
 const inventarioEmpleados = require('../routes/inventarioEmpleados');
 
-
 //ruta de api driver
-const api_driver = require('../services/api_driver');
+require('../services/api_driver');
+
+//ruta procesos automatizados
+require('../scripts/automaticInsertionInasistencia');
 
 const app = express(); 
 
@@ -38,6 +40,7 @@ app.use('/Empleado_edic', empleado_edic_route);
 app.use('/delet_Empleado', deleteEmpleado);
 app.use('/info_empleado', infoEmpleado);
 app.use('/inventarioEmple', inventarioEmpleados);
+
 
 
 module.exports = app;
