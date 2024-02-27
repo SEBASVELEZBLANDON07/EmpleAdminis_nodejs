@@ -18,14 +18,6 @@ require('dotenv').config();
 const auth = require('../services/authentication');
 const checkRole = require('../services/check_Role');
 
-
-
-
-
-
-
-
-
 //verifica el email, y inserta un nuevo usuario si no esiste
 router.post('/signup', (req, res) => {
     let user =req.body;
@@ -50,25 +42,25 @@ router.post('/signup', (req, res) => {
     });
 });
 
-//verifica el acceso, a los usuarios permitidos les envia un token, a lo que no estan verificados los manda averificar a la administracion
+// Verifica el acceso, a los usuarios permitidos les envía un token. A lo que no están verificados, los manda a verificar a la administración.
 router.post('/login', (req, res) => {
     const user = req.body;
-    //se trae los datos de la base de datos para verificar sus datos 
+    // Se traen las credenciales de usuario de la base de datos para verificar los datos. 
     var query = "select correo, password, status,  role from user_perfil_empresa where correo=?";
     coneccion.query(query, [user.correo], (err, results) => {
         if (!err){
-            //se verifica el correo y la contraseña ingresada por el usuario con los datos guardados en la base de datos 
+            // Se verifica el correo y la contraseña ingresada por el usuario con los datos guardados en la base de datos. 
             if(results.length <= 0 || results[0].password != user.password){
                 return res.status(401).json({message: "usuario o contraseña incorrecto"});
             }else{
-                //se verifica si el estadus es true 
+                // Se verifica si el estado es true. 
                 if(results[0].status === "false"){
                     return res.status(402).json({message: "comunicarse a la administracion"});
                 }else{
                     if(results[0].password == user.password){
-                        //variables que se incluiran en el token
+                        // Variable que se incluirá en el token. 
                         const resultado = {correo: results[0].correo, role: results[0].role};
-                        //se genera el token con con las variables a sifrar con la duracion de este token 
+                        // Se genera el token con las variables a cifrar con la duración de este token que es de 8 horas. 
                         const accesstoken = jwt.sign(resultado, process.env.ACCESS_TOKEN, {
                             expiresIn: "8H",
                         });
@@ -85,17 +77,17 @@ router.post('/login', (req, res) => {
 });
 
 
-//por este medio se envia el correo de recuperacion
+// Por este medio se envía el correo de recuperación. 
 var transport = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        //usuario y contraseña de el correo electronico que envia los correos de recuperacion
+        // El usuario y contraseña del correo electrónico que envía los correos de recuperación. 
         user: process.env.EMAIL,
         pass: process.env.PASSWORD_EMAIL
     }
 })
 
-//funcion para recuperar las contraseñas
+//Función para recuperar las contraseñas. 
 router.post('/forgotpassword', (req, res) => {
     const user = req.body;
     var query = "select email, password from prueba_node where email=?";
@@ -125,7 +117,7 @@ router.post('/forgotpassword', (req, res) => {
     });
 });
 
-//consulta de los datos solo de los que son role = user
+// Consulta de los datos solo de los que son rol = user. 
 router.get('/get', auth.authenticateToken, checkRole.check_Role, (req, res) => {
     var query = "select id, name, email, contact, status from prueba_node where role='user'";
     coneccion.query(query, (err, results) =>{
@@ -137,7 +129,7 @@ router.get('/get', auth.authenticateToken, checkRole.check_Role, (req, res) => {
     });
 });
 
-//actualizar status 
+// Actualizar status  
 router.patch('/update', auth.authenticateToken, (req,res)=>{
     let user = req.body;
     var query = "update prueba_node set status=? where id=?";
@@ -146,7 +138,6 @@ router.patch('/update', auth.authenticateToken, (req,res)=>{
             if(results.affectedRows == 0){
                 return res.status(404).json({message: "el usuario no existe "})
             }else{
-                //esta aca else elimina 
                 return res.status(200).json({message: "usuario actualizado con exito"});
             }
         }else{
@@ -155,12 +146,12 @@ router.patch('/update', auth.authenticateToken, (req,res)=>{
     });
 });
 
-//se verifica el token 
+// Se verifica el token.  
 router.get('/checkToken', auth.authenticateToken, (req,res)=>{
     return res.status(200).json({message: "true"});
 });
 
-//cambiar la contraseña autentifica la contraseña antigua con la ingresada y si son correctas cambia la contraseña por la nueva
+// Para cambiar la contraseña, autentifica la contraseña antigua con la ingresada y, si son correctas, cambia la contraseña por la nueva. 
 router.post('/changePassword', auth.authenticateToken, (req, res) => {
     const user = req.body;
     const email = res.locals.email;

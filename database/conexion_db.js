@@ -1,9 +1,10 @@
-//se llmana las variables gobales
+// Se llaman las variables globales
 require('dotenv').config();
 
+// Se llama la biblioteca mysql 
 const mysql = require('mysql');
 
-//se configura la conecion a la base de datos 
+// Se configura la conexión a la base de datos. 
 var conecciondb=mysql.createConnection({
     port: process.env.DB_PORT,
     host: process.env.DB_HOST,
@@ -12,6 +13,7 @@ var conecciondb=mysql.createConnection({
     database: process.env.DB_NAME
 });
 
+// Se conecta a la base de datos. 
 conecciondb.connect(function(error){
     if(error){
         throw error;
@@ -32,4 +34,5 @@ module.exports = conecciondb;
 })
 */
 
+// Se cierra la conexión activa. 
 conecciondb.end;

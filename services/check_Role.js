@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-//verifica el rol
+// Verifica el rol. 
 function check_Role(req, res, next){
     if(res.locals.role === process.env.USER)
         next()

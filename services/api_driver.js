@@ -5,22 +5,22 @@ const path = require("path");
 const stream = require("stream");
 const mime = require('mime');
 
-// Módulo para operaciones de sistema de archivos
+// Módulo para operaciones de sistema de archivos. 
 const fs = require("fs");
 
-//variables globales 
+// Variaciones globales.   
 const KEYFILEPATH = process.env.GOOGLE_DRIVE_KEYFILEPATH; 
 const SCOPES = process.env.GOOGLE_DRIVE_SCOPES;
 const ID_folder = process.env.GOOGLE_DRIVE_FOLDER_ID;
 //const filePath = './controllers/logo_logo.png';
 
-//se autentifica la verificaion 
+// Sé auténtica la verificación. 
 const auth = new google.auth.GoogleAuth({
   keyFile: KEYFILEPATH,
   scopes: SCOPES,
 });
 
-//funcion para llamar a la api de driver para subir la imagen a driver 
+// Función para llamar a la API de Google Drive para almacenar los archivos.
 const uploadFile = async (fileObject) => {
 
   const bufferStream = new stream.PassThrough();
@@ -34,12 +34,12 @@ const uploadFile = async (fileObject) => {
 
       requestBody: {
         name: fileObject.originalname,
-        //id de la carpeta donde se guarda la imagen
+        // ID de la carpeta donde se guardarán los archivos. 
         parents: [ID_folder], 
       },
       fields: "id,name",
     });
-    //retorna la url de la imagen guardada
+    // Retorna la URL de la imagen guardada. 
     console.log(`Uploaded file id ${data.name} ${data.id}`);
     return `https://drive.google.com/file/d/${data.id}`;
   } catch (error) {
@@ -48,7 +48,7 @@ const uploadFile = async (fileObject) => {
   }
 };
 
-//funcion para eliminar archivos gusrdados en drive por medio de la api 
+// Función para eliminar archivos guardados en drive por medio de la API. 
 const deleteFile = async (fileId) => {
   try{
     await google.drive({ version: "v3", auth }).files.delete({
@@ -78,7 +78,7 @@ deleteFile(fileId).then((delete_File)=>{
 
 
 
-// Función para descargar archivos de Google Drive
+// Función para descargar archivos de Google Drive.
 async function downloadFile(fileId) {
   const drive = google.drive({ version: 'v3', auth });
 

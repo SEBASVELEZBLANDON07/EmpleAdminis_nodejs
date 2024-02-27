@@ -1,49 +1,6 @@
+/* Script de base de datos*/
+/* Comandos SQL para crear la base de datos del proyecto empleAdminis*/
 /*
-create table prueba_node(
-    
-    id int primary key (AUTO_INCREMENT),
-    name VARCHAR (250),
-    contact varchar (20),
-    email varchar (250),
-    password varchar (250),
-    status varchar (20),
-    role varchar (20),
-    UNIQUE (email)
-)
-
-insert into prueba_node (name, contact, email, password, status, role)
-values ('sebas', '312626437', 'blandonsebas.@gmail.com', 'sebas123', 'activo', 'admin')
-/*
-create TABLE category(
-    id int NOT NULL AUTO_INCREMENT,
-    name VARCHAR (250) NOT NULL,
-    PRIMARY KEY (id)
-);
-
-CREATE TABLE product(
-	id int NOT null AUTO_INCREMENT,
-    name varchar(250) NOT null,
-    category_id integer not null,
-    description varchar(250),
-    price integer,
-    status varchar(250),
-    PRIMARY KEY (id)
-);
-
-CREATE TABLE bill (
-	id int NOT null AUTO_INCREMENT,
-    uuid varchar(200) NOT null,
-    name varchar(255) NOT null,
-    email varchar(100)not null,
-    contact varchar(20) NOT null,
-    paymentMethod varchar(50) not null,
-    total int not null,
-    productDetails Json DEFAULT null,
-    createBy varchar(100) NOT null,
-    PRIMARY KEY (id)
-);
-
-
 
 -- MySQL Workbench Forward Engineering
 
@@ -80,14 +37,14 @@ CREATE TABLE IF NOT EXISTS `empleadmin`.`EMPLEADO` (
   `nombre` VARCHAR(100) NOT NULL,
   `apellidos` VARCHAR(100) NOT NULL,
   `fecha_nacimiento` DATE NOT NULL,
+  `pais` VARCHAR(45) NOT NULL,
   `num_contacto` INT NOT NULL,
   `correo` VARCHAR(100) NOT NULL,
   `direccion` VARCHAR(80) NOT NULL,
-  `salario` FLOAT NOT NULL,
   `hora_inicio` TIME NULL,
   `hora_fin` TIME NULL,
-  `primer_dias_laboral` ENUM('Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo') CHARACTER SET 'armscii8' NULL,
-  `ultimo_dias_laboral` ENUM('Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo') NULL,
+  `primer_dias_laboral` ENUM('Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo') NULL,
+  `ultimo_dias_laboral` ENUM('Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo') NULL,
   `cargo` VARCHAR(100) NOT NULL,
   `fotografia` VARCHAR(512) NOT NULL,
   `estatus_notificacion` VARCHAR(45) NOT NULL,
@@ -163,10 +120,12 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `empleadmin`.`incapacidad` (
   `Id_registro_incapacidad` INT NOT NULL AUTO_INCREMENT,
-  `fecha` DATE NOT NULL,
+  `fecha_registro` DATE NOT NULL,
+  `fecha_incapacidad` DATE NOT NULL,
   `causa` VARCHAR(1000) NULL,
   `descripcion` VARCHAR(2000) NULL,
-  `archivo_incapacidad` MEDIUMBLOB NOT NULL,
+  `archivo_incapacidad` VARCHAR(512) NOT NULL,
+  `cantidad_dias_incapacidad` INT NULL,
   `id_cedula_i` INT NOT NULL,
   PRIMARY KEY (`Id_registro_incapacidad`),
   INDEX `fk_incapacidad_EMPLEADO1_idx` (`id_cedula_i` ASC),
@@ -198,18 +157,39 @@ CREATE TABLE IF NOT EXISTS `empleadmin`.`user_perfil_empresa` (
 ENGINE = InnoDB;
 
 
+-- -----------------------------------------------------
+-- Table `empleadmin`.`empleados_eliminados`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `empleadmin`.`empleados_eliminados` (
+  `id_empleados_eliminados` INT NOT NULL,
+  `motivo_eliminacion` VARCHAR(500) NOT NULL,
+  `fechaEliminacion` DATE NOT NULL,
+  `id_registro_elininar` INT NOT NULL AUTO_INCREMENT,
+  `empresa_empleado` VARCHAR(100) NOT NULL,
+  PRIMARY KEY (`id_registro_elininar`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `empleadmin`.`inasistencia`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `empleadmin`.`inasistencia` (
+  `id_registro_asistencia` INT NOT NULL AUTO_INCREMENT,
+  `fecha` DATE NOT NULL,
+  `id_cedula_ina` INT NOT NULL,
+  PRIMARY KEY (`id_registro_asistencia`),
+  INDEX `fk_asistencia_EMPLEADO1_idx` (`id_cedula_ina` ASC),
+  CONSTRAINT `fk_asistencia_EMPLEADO10`
+    FOREIGN KEY (`id_cedula_ina`)
+    REFERENCES `empleadmin`.`EMPLEADO` (`id_cedula`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
-
-
-
-
-
-
-
-
-
 
 
 

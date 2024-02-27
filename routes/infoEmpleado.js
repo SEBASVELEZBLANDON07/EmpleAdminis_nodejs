@@ -1,32 +1,32 @@
 const express = require('express');
-//coneccion a la base de dastos 
+// Conexión a la base de datos. 
 const coneccion = require('../database/conexion_db');
 const { route } = require('./users_route');
 
-//definir la variable de rutas para comensar las funsiones 
+// Definir la variable de rutas para comenzar las funciones 
 const router = express.Router();
 
-//variables de autenticacion de rol y verificasion de token 
+// Variables de autenticación de rol y verificación de token. 
 const auth = require('../services/authentication');
 const checkRole = require('../services/check_Role');
 
-//se llama al service api google driver 
+// Se llama al servicio API Google Driver. 
 const apiDriver = require('../services/api_driver');
 
 const { downloadFile } = require('../services/api_driver');
 
 const fs = require('fs');
 
-//procesar imagen 
+//Procesar imagen. 
 const multer = require('multer'); 
 const { authenticate } = require('@google-cloud/local-auth');
 const { Console, error } = require('console');
 
-//se llmana las variables gobales
+// Se llaman las variables globales. 
 require('dotenv').config();
 
-// Ruta para descargar la imagen
-router.get('/fotografiaDescargar/:id', async (req, res) => {
+// Ruta para descargar la imagen del empleado almacenada en drive. 
+router.get('/fotografiaDescargar/:id',  auth.authenticateToken, checkRole.check_Role, async (req, res) => {
     try {
       const Id_emple = req.params.id;
       var query = "SELECT `fotografia` FROM `empleado` WHERE id_cedula = ?";
@@ -35,17 +35,17 @@ router.get('/fotografiaDescargar/:id', async (req, res) => {
           if (results.length <= 0) {
             return res.status(400).json({ message: "Usuario no encontrado" });
           } else {
-            // Obtén la URL de la imagen
+            // Obtén la URL de la imagen. 
             const url_fotografia = results[0].fotografia;
   
-            // Separa el ID del archivo de la URL guardada en la base de datos
+            // Separa el ID del archivo de la URL guardada en la base de datos. 
             const parts = url_fotografia.split("/");
             const fileId = parts[parts.length - 1];
   
-            // Descarga el archivo de Google Drive
+            // Descarga el archivo de Google Drive. 
             const fileContent = await downloadFile(fileId);
   
-            // Devuelve la imagen descargada como respuesta
+            // Retorna la imagen descargada como respuesta.
             res.writeHead(200, {
               'Content-Type': 'image/jpeg',
               'Content-Length': fileContent.length,
@@ -63,27 +63,27 @@ router.get('/fotografiaDescargar/:id', async (req, res) => {
     }
 });
 
-// Ruta para descargar la el pdf de incapacidad
-router.get('/pdfDescargar/:id', async (req, res) => {
+// Ruta para descargar el PDF de incapacidad del empleado almacenado en drive. 
+router.get('/pdfDescargar/:id', auth.authenticateToken, checkRole.check_Role, async (req, res) => {
     try {
       const Id_emple = req.params.id;
       var query = "SELECT `archivo_incapacidad` FROM `incapacidad` WHERE id_cedula_i = ?";
       coneccion.query(query, [Id_emple], async (err, results) => {
         if (!err) {
           if (results.length <= 0) {
-            return res.status(400).json({ message: "Usuario no encontrado" });
+            return res.status(400).json({ message: "Usuario no tiene pdf de incapacidad" });
           } else {
-            // Obtén la URL del pdf
+            //Obtén la URL del PDF.  
             const url_pdf = results[0].archivo_incapacidad;
   
-            // Separa el ID del archivo de la URL guardada en la base de datos
+            // Separa el ID del archivo de la URL guardada en la base de datos. 
             const parts = url_pdf.split("/");
             const fileId = parts[parts.length - 1];
   
-            // Descarga el archivo de Google Drive
+            // Descarga el archivo de Google Drive.
             const fileContent = await downloadFile(fileId);
   
-            // Devuelve el pdf descargada como respuesta
+            // Retorna el PDF descargado como respuesta. 
             res.writeHead(200, {
                 'Content-Type': 'application/pdf',
                 'Content-Length': fileContent.length,
@@ -92,17 +92,17 @@ router.get('/pdfDescargar/:id', async (req, res) => {
           }
         } else {
           console.error(err);
-          res.status(500).send('Error al obtener el la url desde la base de datos');
+          res.status(500).send('Error al obtener la URL desde la base de datos. ');
         }
       });
     } catch (error) {
       console.error(error);
-      res.status(500).send('Error al descargar el pdf desde Google Drive');
+      res.status(500).send('Error al descargar el PDF desde Google Drive.');
     }
 });
 
-//ruta para breve informacion del historial del emplado 
-router.get('/infoEmpleadoEliminar/:id', (req, res) => {
+// Ruta para breve información del historial del empleado a eliminar. 
+router.get('/infoEmpleadoEliminar/:id',  auth.authenticateToken, checkRole.check_Role, (req, res) => {
     const Id_Refernt = req.params.id;
     
     var query = "SELECT `id_cedula` FROM `empleado` WHERE id_cedula = ?";
@@ -175,8 +175,8 @@ router.get('/infoEmpleadoEliminar/:id', (req, res) => {
     });
 });
 
-//ruta para reguistros del empleado 
-router.get('/infoEmpleado/:id', (req, res) => {
+// Información más detallada del empleado. 
+router.get('/infoEmpleado/:id',  auth.authenticateToken, checkRole.check_Role, (req, res) => {
     const Id_info = req.params.id;
 
     var query = "SELECT `id_cedula` FROM `empleado` WHERE id_cedula = ?";
@@ -185,8 +185,7 @@ router.get('/infoEmpleado/:id', (req, res) => {
             if(results.length <= 0){
                 return res.status(400).json({message: "usuario no encontrado"});
             }else{
-                
-
+    
                 query = "SELECT `id_cedula`, `tipo_documento`, `nombre`, `apellidos`, `fecha_nacimiento`, `pais`, `num_contacto`, `correo`, `direccion`, `hora_inicio`, `hora_fin`, `primer_dias_laboral`, `ultimo_dias_laboral`, `cargo`, `fotografia`, `estatus_notificacion`, `id_empresa_e` FROM `empleado` WHERE id_cedula = ?";
                 coneccion.query(query, [Id_info], (err, results)=>{
                     if(!err){
@@ -207,15 +206,14 @@ router.get('/infoEmpleado/:id', (req, res) => {
                                                 
                                                 query = "SELECT `id_registro_asistencia`, `fecha`, `horario`, `id_cedula_a` FROM `asistencia` WHERE id_cedula_a = ?";
                                                 coneccion.query(query, [Id_info], (err, results)=>{
-                                                if(!err){
-                                                        const asistencia = results;
+                                                    if(!err){
+                                                            const asistencia = results;
 
-                                                        return res.status(200).json({perfil, cuentaBancaria, incapacidades, horasExtras, asistencia});
-                                                }else{
-                                                    return res.status(500).json(err);
-                                                }
-                                            });
-
+                                                            return res.status(200).json({perfil, cuentaBancaria, incapacidades, horasExtras, asistencia});
+                                                    }else{
+                                                        return res.status(500).json(err);
+                                                    }
+                                                });
                                             }else{
                                                 return res.status(500).json(err);
                                             }
@@ -224,7 +222,6 @@ router.get('/infoEmpleado/:id', (req, res) => {
                                        return res.status(500).json(err);
                                    }
                                });
-                                
                             }else{
                                 return res.status(500).json(err);
                             }

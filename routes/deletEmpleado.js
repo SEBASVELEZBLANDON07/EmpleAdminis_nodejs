@@ -1,32 +1,32 @@
 const express = require('express');
-//coneccion a la base de dastos 
+ // Conexión a la base de datos.
 const coneccion = require('../database/conexion_db');
 const { route } = require('./users_route');
 
-//definir la variable de rutas para comensar las funsiones 
+// Definir la variable de rutas para comenzar las funciones. 
 const router = express.Router();
 
-//variables de autenticacion de rol y verificasion de token 
+// Variables de autenticación de rol y verificación de token. 
 const auth = require('../services/authentication');
 const checkRole = require('../services/check_Role');
 
-//se llama al service api google driver 
+// Se llama al servicio API Google Driver. 
 const apiDriver = require('../services/api_driver');
 const fs = require('fs');
 
-//procesar imagen 
+// Procesar imagen 
 const multer = require('multer'); 
 const { authenticate } = require('@google-cloud/local-auth');
 const { Console, error } = require('console');
 
-//se llmana las variables gobales
+// Se llaman las variables globales 
 require('dotenv').config();
 
-//se eliminan todos los registro del empleado incluyendo los archivos guadados en drive
-router.delete('/deleteEmpleado/:id', (req, res, next) => {
+// Se eliminan todos los registros del empleado, incluyendo los archivos guardados en drive.
+router.delete('/deleteEmpleado/:id', auth.authenticateToken, checkRole.check_Role, (req, res, next) => {
     const id_eliminar = req.params.id;
     
-    //asemos la consulta para eliminar la fotografia de driver
+    // Se la consulta para eliminar la fotografia de Drive
     var query ="SELECT fotografia FROM empleado WHERE id_cedula=?";
     coneccion.query(query, [id_eliminar], (err, results)=>{
         if(!err){
@@ -34,48 +34,49 @@ router.delete('/deleteEmpleado/:id', (req, res, next) => {
                 return res.status(400).json({message: "url de la fotografia no encontrada"});
             }else{ 
 
-                //se octine la url de la imagen
+                // Se obtiene la URL de la imagen. 
                 const url_fotografia = results[0].fotografia;
 
-                //sacamos el id de la url guardada en la base de datos, lo guadadmos en la variable fileId
+                // Se saca el ID de la URL guardada en la base de datos, lo guardamos en la variable fileId
                 const parts = url_fotografia.split("/");
                 const fileId = parts[parts.length - 1];
 
                 console.log("fotografia se elimina id", fileId);
 
-                //Se llamada la api de drive para eliminar el archivo de la fotografia en Google Drive, se le pasa el id a eliminar
+                // Se llama la API de Drive para eliminar el archivo de la fotografía en Google Drive, se le pasa el ID a eliminar. 
                 apiDriver.deleteFile(fileId).then((delete_File)=>{
 
-                    //se buscan la url de los pdf de incapacidad registradas  
+                    // Se busca la URL de los PDF de incapacidad registrada. 
                     query ="SELECT `archivo_incapacidad` FROM `incapacidad` WHERE id_cedula_i = ?";
                     coneccion.query(query, [id_eliminar], (err, results)=>{
                         if(!err){
 
-                            //si no hay registros de url de pdfs,  eliminamos los registros demoas registos de horas extras, asistencias, cuenta bancaria y perfil del empleado
+                            // Si no hay registros de URL de PDF, eliminamos los demás registros
+                            // registros de horas extras, asistencias, inasistencias, cuenta bancaria y perfil del empleado.
                             if(results.length <= 0){
                                 
-                                //eliminamos el registro de horas extras registreadas en la base de datos 
+                                 // Eliminamos el registro de horas extras registradas en la base de datos.
                                 query ="DELETE FROM `horas_extras` WHERE id_cedula_h = ?";
                                 coneccion.query(query, [id_eliminar], (err, results)=>{
                                     if(!err){
 
-                                        //eliminamos las asistencias registradas en la base de datos 
+                                        // Eliminamos las asistencias registradas en la base de datos. 
                                         query = "DELETE FROM `asistencia` WHERE id_cedula_a = ?";
                                         coneccion.query(query, [id_eliminar], (err, results)=>{
                                             if(!err){
 
-                                                //eliminar las inasistencias registradas en la base de datos
+                                                // Eliminar las inasistencias registradas en la base de datos. 
                                                 query = "DELETE FROM `inasistencia` WHERE id_cedula_ina = ?";
                                                 coneccion.query(query, [id_eliminar], (err, results)=>{
                                                     if(!err){
 
-                                                        //eliminamos la cuenta bancaria registrada en la base de datos
+                                                        // Eliminamos la cuenta bancaria registrada en la base de datos. 
                                                         query = "DELETE FROM `cuenta_bancaria_empleado` WHERE id_cedula_c = ?";
                                                         coneccion.query(query, [id_eliminar], (err, results)=>{
 
                                                             if(!err){
 
-                                                                //eliminamos el perfil del empleado 
+                                                                // Eliminamos el perfil del empleado. 
                                                                 query = "DELETE FROM `empleado` WHERE id_cedula = ?";
                                                                 coneccion.query(query, [id_eliminar], (err, results)=>{
                                                                     
@@ -102,22 +103,22 @@ router.delete('/deleteEmpleado/:id', (req, res, next) => {
                                     }
                                 });
 
-                            //si hay urls de pdfs registradas, eliminamos los pdfs de driver y luego eliminamos los registros de la base de datos,
+                            // Si hay URL de PDF registradas, eliminamos los PDF de driver y luego eliminamos los registros de la base de datos.
                             }else{
-                                //sacamos el numero de urls guadadas 
+                                 // Sacamos el número de URL guardadas
                                 var numPDF= results.length;
                                 
-                                //usamos el bucle for para realizar las eliminaciones en drive de los archivos esistentes
+                                // Usamos el bucle for para realizar las eliminaciones en drive de los archivos existentes.
                                 for (let i = 0; i <= numPDF-1; i++) {
                                     
-                                    //se octine la url del pdf 
+                                    // Se obtiene la URL del PDF. 
                                     const url_pdf= results[i].archivo_incapacidad;
                                     
-                                    //sacamos el id de la url guardada en la base de datos, lo guadadmos en la variable fileIdPDF
+                                    // Sacamos el ID de la URL guardada en la base de datos, lo guardamos en la variable fileIdPDF
                                     const parts = url_pdf.split("/");
                                     const fileIdPDF = parts[parts.length - 1];
 
-                                    //se elimina el archivo pdf
+                                    // Se elimina el archivo PDF 
                                     apiDriver.deleteFile(fileIdPDF).then((delete_File)=>{
                                         console.log(delete_File);
                                     }).catch((error)=>{
@@ -125,33 +126,33 @@ router.delete('/deleteEmpleado/:id', (req, res, next) => {
                                     });
                                 }
 
-                                //elliminamos los registros de incapacidad ingresados a la base de datos.
+                                // Eliminamos los registros de incapacidad ingresados a la base de datos.   
                                 query ="DELETE FROM `incapacidad` WHERE id_cedula_i = ?";
                                 coneccion.query(query, [id_eliminar], (err, results)=>{
                                     if(!err){
 
-                                        //eliminamos el registro de horas extras registreadas en la base de datos 
+                                        // Eliminamos el registro de horas extras registradas en la base de datos. 
                                         query ="DELETE FROM `horas_extras` WHERE id_cedula_h = ?";
                                         coneccion.query(query, [id_eliminar], (err, results)=>{
                                             if(!err){
 
-                                                //eliminamos las asistencias registradas en la base de datos 
+                                                // Eliminamos las asistencias registradas en la base de datos. 
                                                 query = "DELETE FROM `asistencia` WHERE id_cedula_a = ?";
                                                 coneccion.query(query, [id_eliminar], (err, results)=>{
                                                     if(!err){
                                                         
-                                                        //eliminar las inasistencias registradas en la base de datos
+                                                        // Eliminar las inasistencias registradas en la base de datos. 
                                                         query = "DELETE FROM `inasistencia` WHERE id_cedula_ina = ?";
                                                         coneccion.query(query, [id_eliminar], (err, results)=>{
                                                             if(!err){
 
-                                                                //eliminamos la cuenta bancaria registrada en la base de datos
+                                                                // Eliminamos la cuenta bancaria registrada en la base de datos. 
                                                                 query = "DELETE FROM `cuenta_bancaria_empleado` WHERE id_cedula_c = ?";
                                                                 coneccion.query(query, [id_eliminar], (err, results)=>{
 
                                                                     if(!err){
 
-                                                                        //eliminamos el perfil del empleado 
+                                                                        // Eliminamos el perfil del empleado. 
                                                                         query = "DELETE FROM `empleado` WHERE id_cedula = ?";
                                                                         coneccion.query(query, [id_eliminar], (err, results)=>{
                                                                             
@@ -169,7 +170,6 @@ router.delete('/deleteEmpleado/:id', (req, res, next) => {
                                                                 return res.status(500).json(err)
                                                             }
                                                         })
-                                                        
                                                     }else{
                                                         return res.status(500).json(err);
                                                     }
@@ -197,11 +197,11 @@ router.delete('/deleteEmpleado/:id', (req, res, next) => {
     });
 });
 
-//se agraga un registro del empleado eliminado 
-router.post('/RegisEmpleado_eliminado', (req, res) => {
+// Se agrega un registro del empleado eliminado.  
+router.post('/RegisEmpleado_eliminado', auth.authenticateToken, checkRole.check_Role, (req, res) => {
     const id_empleadoEliminado = req.body;
 
-    //se ase la insercopn a la base de datos del empleado que se elimino 
+    // Se ase la inscripción a la base de datos del empleado que se eliminó. 
     var query = "INSERT INTO `empleados_eliminados`(`id_empleados_eliminados`, `motivo_eliminacion`, `fechaEliminacion`,  `empresa_empleado`) VALUES (?,?,?,?)";
     coneccion.query(query, [id_empleadoEliminado.id_empleados_eliminados, id_empleadoEliminado.motivo_eliminacion, id_empleadoEliminado.fechaEliminacion, id_empleadoEliminado.empresa_empleado], (err, results)=>{
         if(!err){
@@ -212,9 +212,11 @@ router.post('/RegisEmpleado_eliminado', (req, res) => {
     });
 });
 
-router.get('/Empleado_eliminados/:id', (req, res, next) =>{
+// Se consultan los empleados eliminados por la empresa. 
+router.get('/Empleado_eliminados/:id', auth.authenticateToken, checkRole.check_Role, (req, res, next) =>{
     const resgistro_empresa = req.params.id;
 
+    // Consulta a la base de datos de los empleados eliminados. 
     var query = "SELECT `id_empleados_eliminados`, `motivo_eliminacion`, `fechaEliminacion` FROM `empleados_eliminados` WHERE empresa_empleado = ?";
     coneccion.query(query, [resgistro_empresa], (err, results)=>{
         if(!err){

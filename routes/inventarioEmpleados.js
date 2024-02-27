@@ -1,29 +1,29 @@
 const express = require('express');
-//coneccion a la base de dastos 
+// Conexión a la base de datos.  
 const coneccion = require('../database/conexion_db');
 const { route } = require('./users_route');
 
-//definir la variable de rutas para comensar las funsiones 
+// Definir la variable de rutas para comenzar las funciones.  
 const router = express.Router();
 
-//variables de autenticacion de rol y verificasion de token 
+// Variables de autenticación de rol y verificación de token. 
 const auth = require('../services/authentication');
 const checkRole = require('../services/check_Role');
 
-//se llama al service api google driver 
+// Se llama al servicio API Google Drive.
 const apiDriver = require('../services/api_driver');
 const fs = require('fs');
 
-//procesar imagen 
+// Procesar imagen. 
 const multer = require('multer'); 
 const { authenticate } = require('@google-cloud/local-auth');
 const { Console, error } = require('console');
 
-//se llmana las variables gobales
+// Se llaman las variables globales 
 require('dotenv').config();
 
-//se buscan los empleados de le mepresa para el inventario general  
-router.get('/inventarioGeneral/:id', (req, res, next) =>{
+// Se buscan los empleados de la empresa para el inventario general. 
+router.get('/inventarioGeneral/:id', auth.authenticateToken, checkRole.check_Role, (req, res, next) =>{
     const inventario = req.params.id;
 
     var query ="SELECT `id_empresa` FROM `empresa` WHERE nom_empresa = ?";
