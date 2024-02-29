@@ -186,30 +186,41 @@ router.get('/infoEmpleado/:id',  auth.authenticateToken, checkRole.check_Role, (
                 return res.status(400).json({message: "usuario no encontrado"});
             }else{
     
-                query = "SELECT `id_cedula`, `tipo_documento`, `nombre`, `apellidos`, `fecha_nacimiento`, `pais`, `num_contacto`, `correo`, `direccion`, `hora_inicio`, `hora_fin`, `primer_dias_laboral`, `ultimo_dias_laboral`, `cargo`, `fotografia`, `estatus_notificacion`, `id_empresa_e` FROM `empleado` WHERE id_cedula = ?";
+                query = "SELECT `id_cedula`, `tipo_documento`, `nombre`, `apellidos`, `fecha_nacimiento`, `pais`, `num_contacto`, `correo`, `direccion`, `hora_inicio`, `hora_fin`, `primer_dias_laboral`, `ultimo_dias_laboral`, `cargo` FROM `empleado` WHERE id_cedula = ?";
                 coneccion.query(query, [Id_info], (err, results)=>{
                     if(!err){
-                        const perfil  = results; 
-                        query = "SELECT `num_cuenta_bancaria`, `nom_banco`, `tipo_cuenta`, `salario`, `id_cedula_c` FROM `cuenta_bancaria_empleado` WHERE id_cedula_c = ?";
+                        const perfil  = results;
+                        
+                        query = "SELECT `num_cuenta_bancaria`, `nom_banco`, `tipo_cuenta`, `salario` FROM `cuenta_bancaria_empleado` WHERE id_cedula_c = ?";
                         coneccion.query(query, [Id_info], (err, results)=>{
                             if(!err){
                                 const cuentaBancaria = results;
-                                query = "SELECT `Id_registro_incapacidad`, `fecha_registro`, `fecha_incapacidad`, `causa`, `descripcion`, `archivo_incapacidad`, `cantidad_dias_incapacidad`, `id_cedula_i` FROM `incapacidad` WHERE id_cedula_i = ?";
+
+                                query = "SELECT  `fecha_registro`, `fecha_incapacidad`, `causa`, `descripcion`, `archivo_incapacidad`, `cantidad_dias_incapacidad`  FROM `incapacidad` WHERE id_cedula_i = ? ORDER BY Id_registro_incapacidad DESC LIMIT 1";
                                 coneccion.query(query, [Id_info], (err, results)=>{
                                    if(!err){
                                         const incapacidades = results;
 
-                                        query = "SELECT `id_registro_horas_extras`, `fecha`, `horas_extras`, `total`, `id_cedula_h` FROM `horas_extras` WHERE id_cedula_h = ?";
+                                        query = "SELECT  `fecha`, `horas_extras`, `total` FROM `horas_extras` WHERE id_cedula_h = ? ORDER BY id_registro_horas_extras DESC LIMIT 1";
                                         coneccion.query(query, [Id_info], (err, results)=>{
                                             if(!err){
                                                 const horasExtras = results;
                                                 
-                                                query = "SELECT `id_registro_asistencia`, `fecha`, `horario`, `id_cedula_a` FROM `asistencia` WHERE id_cedula_a = ?";
+                                                query = "SELECT `fecha`, `horario` FROM `asistencia` WHERE id_cedula_a = ? ORDER BY id_registro_asistencia DESC LIMIT 1";
                                                 coneccion.query(query, [Id_info], (err, results)=>{
                                                     if(!err){
                                                             const asistencia = results;
 
-                                                            return res.status(200).json({perfil, cuentaBancaria, incapacidades, horasExtras, asistencia});
+                                                            query = "SELECT `fecha` FROM `inasistencia` WHERE id_cedula_ina = ? ORDER BY id_registro_inasistencia DESC LIMIT 1";
+                                                            coneccion.query(query, [Id_info], (err, results)=>{
+                                                            if(!err){
+                                                                const inasistencia = results;
+                                                            
+                                                                return res.status(200).json({perfil, cuentaBancaria, incapacidades, horasExtras, asistencia, inasistencia});
+                                                            }else{
+                                                                return res.status(500).json(err);
+                                                            }
+                                                        });
                                                     }else{
                                                         return res.status(500).json(err);
                                                     }
@@ -235,11 +246,60 @@ router.get('/infoEmpleado/:id',  auth.authenticateToken, checkRole.check_Role, (
             return res.status(500).json(err);
         }
     });
-    //return res.status(200).json({message: "funcion realizada con exito"});
 });
 
+// Se consulta la información de la plataforma más detallada para las tablas 
+router.get('/tablaContec/:id',  auth.authenticateToken, checkRole.check_Role, (req, res) => {
+    const Id_tabla = req.params.id;
 
+    var query = "SELECT `id_cedula` FROM `empleado` WHERE id_cedula = ?";
+    coneccion.query(query, [Id_tabla], (err, results) =>{
+        if(!err){
+            if(results.length <= 0){
+                return res.status(400).json({message: "usuario no encontrado"});
+            }else{
+                query = " SELECT `fecha`, `horario` FROM `asistencia` WHERE id_cedula_a = ? ORDER BY `fecha` DESC;";
+                coneccion.query(query, [Id_tabla], (err, results)=>{
+                    if(!err){
+                        const asistencia = results;
 
+                        query = "SELECT  `fecha`, `horas_extras`, `total` FROM `horas_extras` WHERE id_cedula_h = ? ORDER BY `fecha` DESC;";
+                        coneccion.query(query, [Id_tabla], (err, results)=>{
+                            if(!err){
+                                const horas_extras = results;
 
+                                query = "SELECT `fecha` FROM `inasistencia` WHERE id_cedula_ina = ? ORDER BY `fecha` DESC;" ;
+                                coneccion.query(query, [Id_tabla], (err, results)=>{
+                                    if(!err){
+                                        const inasistencia = results;
+
+                                        query = "SELECT  `fecha_registro`, `fecha_incapacidad`, `causa`, `descripcion`, `archivo_incapacidad`, `cantidad_dias_incapacidad`  FROM `incapacidad` WHERE id_cedula_i = ? ORDER BY Id_registro_incapacidad DESC;";
+                                        coneccion.query(query, [Id_tabla], (err, results)=>{
+                                            if(!err){
+                                                const incapacidad = results;
+
+                                                return res.status(200).json({asistencia, horas_extras, inasistencia, incapacidad});
+                                            }else{
+                                                return res.status(500).json(err);
+                                            }
+                                        })
+                                    }else{
+                                        return res.status(500).json(err);
+                                    }
+                                })
+                            }else{
+                                return res.status(500).json(err);
+                            }
+                        })
+                    }else{
+                        return res.status(500).json(err);
+                    }
+                })
+            }
+        }else{
+            return res.status(500).json(err);
+        }
+    })
+})
 
 module.exports = router;

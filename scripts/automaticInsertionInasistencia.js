@@ -62,7 +62,7 @@ const insertarInasistencia = (id_cedula_inasistencia)=>{
     // Restar 5 horas a la fecha actual
     fechainasistencia.setHours(fechainasistencia.getHours() - 5);
     const id_cedula = id_cedula_inasistencia;
-    var query ="INSERT INTO `inasistencia`(`id_registro_asistencia`, `fecha`, `id_cedula_ina`) VALUES (NULL, ?, ?)"
+    var query ="INSERT INTO `inasistencia`(`id_registro_inasistencia`, `fecha`, `id_cedula_ina`) VALUES (NULL, ?, ?)"
     coneccion.query(query, [fechainasistencia, id_cedula], (err, results) =>{
         if(!err){
             return console.log("inasitencia realizada con exito", id_cedula)
